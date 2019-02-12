@@ -1,0 +1,12 @@
+{
+  "name": "todo-graphql",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "git@github.com:Jesus-Gonzalez/todo-graphql.git",
+  "author": "Jesús González Jaén",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server": "^2.4.0",
+    "graphql": "^14.1.1"
+  }
+}
