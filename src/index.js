@@ -1,40 +1,63 @@
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, gql, PubSub } = require('apollo-server');
+const pubsub = new PubSub();
+
+const { TodoAPI } = require('./todo.api')
+const todoResolvers = require('./todo.resolvers')(pubsub)
 
 const typeDefs = gql`
-  # Comments in GraphQL are defined with the hash (#) symbol.
-
-  # This "Book" type can be used in other type declarations.
   type Todo {
     id: String
     name: String
     completed: Boolean
-    lastModificationDate: Number
+    lastModificationDate: String
   }
 
-  # The "Query" type is the root of all GraphQL queries.
-  # (A "Mutation" type will be covered later on.)
+  input ToggleCompletedTodoInput {
+    id: String
+    completed: Boolean
+  }
+
+  input RenameTodoInput {
+    id: String
+    name: String
+  }
+
   type Query {
-    todos: [Todo]
+    getTodos: [Todo]
+  }
+
+  type Mutation {
+    createTodo(name: String): Todo
+    toggleCompletedTodo(todo: ToggleCompletedTodoInput): String
+    renameTodo(todo: RenameTodoInput): String
+    deleteTodo(id: String): String
+  }
+
+  type Subscription {
+    todoCreated: Todo
   }
 `;
 
-// Resolvers define the technique for fetching the types in the
-// schema.  We'll retrieve books from the "books" array above.
 const resolvers = {
   Query: {
-    todos: (...rest) => {
-      debugger
-    }
+    ...todoResolvers.Query
   },
+  Mutation: {
+    ...todoResolvers.Mutation
+  },
+  Subscription: {
+    ...todoResolvers.Subscription
+  }
 };
 
-// In the most basic sense, the ApolloServer can be started
-// by passing type definitions (typeDefs) and the resolvers
-// responsible for fetching the data for those types.
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  dataSources: () => ({
+    todosAPI: new TodoAPI()
+  })
+});
 
-// This `listen` method launches a web-server.  Existing apps
-// can utilize middleware options, which we'll discuss later.
 server.listen().then(({ url }) => {
   console.log(`Server ready at ${url}`);
 });
